@@ -1,0 +1,17 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ series is defined ? 'Editar' : 'Nova' }} Série{% endblock %}
+
+{% block body %}
+    {{ form_start(seriesForm) }}
+    <div class="my-custom-class-for-errors">
+        {{ form_errors(seriesForm) }}
+    </div>
+
+    <div class="row">
+        <div class="col">
+            {{ form_row(seriesForm.name) }}
+        </div>
+    </div>
+    {{ form_end(seriesForm) }}
+{% endblock %}
