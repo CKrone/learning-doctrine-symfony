@@ -2,15 +2,17 @@
 
 namespace App\Controller;
 
+use App\DTO\SeriesCreateFromInput;
+use App\Entity\Episode;
+use App\Entity\Season;
 use App\Entity\Series;
 use App\Form\SeriesType;
+use App\Repository\EpisodeRepository;
+use App\Repository\SeasonRepository;
 use App\Repository\SeriesRepository;
-use Doctrine\DBAL\Types\TextType;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Exception\ORMException;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\Form\Extension\Core\Type\SubmitType;
-use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -37,20 +39,23 @@ class SeriesController extends AbstractController
     #[Route('/series/create', methods: ['GET'])]
     public function addSerieForm(Request $request): Response
     {
-        $seriesForm = $this->createForm(SeriesType::class, new Series(''));
-
+        $seriesForm = $this->createForm(SeriesType::class, new SeriesCreateFromInput());
         return $this->renderForm('series/form.html.twig', compact('seriesForm'));
     }
 
     #[Route('/series/create', name: 'app_add_series', methods: ['POST'])]
     public function addSeries(Request $request): Response
     {
-        $series = new Series();
-        $this->createForm(SeriesType::class, $series)->handleRequest($request);
+        $input = new SeriesCreateFromInput();
+        $seriesForm = $this->createForm(SeriesType::class, $input)->handleRequest($request);
+
+        if (! $seriesForm->isValid()) {
+            return $this->renderForm('series/form.html.twig', compact('seriesForm'));
+        }
+        $series = new Series($input->seriesName);
 
         $this->addFlash('success', "Série '{$series->getName()}' adicionada com sucesso!");
-
-        $this->seriesRepository->add($series, true);
+        $this->seriesRepository->add($input);
         return new RedirectResponse('/series');
     }
 

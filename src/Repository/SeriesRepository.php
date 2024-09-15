@@ -2,10 +2,13 @@
 
 namespace App\Repository;
 
+use App\DTO\SeriesCreateFromInput;
 use App\Entity\Series;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\ORM\Exception\ORMException;
+use Doctrine\ORM\OptimisticLockException;
 use Doctrine\Persistence\ManagerRegistry;
+use Exception;
 
 /**
  * @extends ServiceEntityRepository<Series>
@@ -17,8 +20,11 @@ use Doctrine\Persistence\ManagerRegistry;
  */
 class SeriesRepository extends ServiceEntityRepository
 {
-    public function __construct(ManagerRegistry $registry)
-    {
+    public function __construct(
+        private SeasonRepository $seasonRepository,
+        private EpisodeRepository $episodeRepository,
+        ManagerRegistry $registry
+    ) {
         parent::__construct($registry, Series::class);
     }
 
@@ -40,12 +46,31 @@ class SeriesRepository extends ServiceEntityRepository
         $this->remove($serie, true);
     }
 
-    public function add(Series $serie, bool $flush = false): void
-    {
-        $this->getEntityManager()->persist($serie);
+//    public function add(Series $serie, bool $flush = false): void
+//    {
+//        $this->getEntityManager()->persist($serie);
+//
+//        if ($flush) {
+//            $this->getEntityManager()->flush();
+//        }
+//
+//    }
 
-        if ($flush) {
-            $this->getEntityManager()->flush();
+    public function add(SeriesCreateFromInput $input): Series
+    {
+        $entityManager = $this->getEntityManager();
+        $series = new Series($input->seriesName);
+        $entityManager->persist($series);
+        $entityManager->flush();
+
+        try {
+            $this->seasonRepository->addSeasonsQuantity($input->seasonsQuantity, $series->getId());
+            $seasons = $this->seasonRepository->findBy(['series' => $series]);
+            $this->episodeRepository->addEpisodesPerSeason($input->episodesPerSeason, $seasons);
+        } catch (Exception $e) {
+            $this->remove($series, true);
         }
+
+        return $series;
     }
 }
