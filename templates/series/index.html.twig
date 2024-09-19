@@ -4,25 +4,31 @@
 {% block body %}
 
     <div class="example-wrapper">
-        <a href="/series/create" class="btn btn-dark mb-3">Adicionar Série</a>
+        {% if is_granted('ROLE_USER') %}
+            <a href="/series/create" class="btn btn-dark mb-3">Adicionar Série</a>
+        {% endif %}
         <ul class="list-group">
             {% for serie in seriesList %}
                 <li class="list-group-item d-flex justify-content-between align-items-center">
-                    <a href="{{ path('app_season', {seriesId: serie.id}) }}">
+                    {% if is_granted('ROLE_USER') %}
+                        <a href="{{ path('app_season', {seriesId: serie.id}) }}">
+                    {% endif %}
                         {{ serie.name }}
-                    </a>
+                    {% if is_granted('ROLE_USER') %}</a> {% endif %}
 
-                    <div class="d-flex">
-                        <a href="{{ path('app_edit_series_form', {id: serie.id}) }}" class="btn btn-sm btn-primary me-2">
-                            E
-                        </a>
-                        <form method="post" action="{{ path('app_series_delete', {id: serie.id}) }}">
-                            <input type="hidden" name="_method" value="DELETE">
-                            <button href="#" class="btn btn-sm btn-danger">
-                                X
-                            </button>
-                        </form>
-                    </div>
+                    {% if is_granted('ROLE_USER') %}
+                        <div class="d-flex">
+                            <a href="{{ path('app_edit_series_form', {id: serie.id}) }}" class="btn btn-sm btn-primary me-2">
+                                E
+                            </a>
+                            <form method="post" action="{{ path('app_series_delete', {id: serie.id}) }}">
+                                <input type="hidden" name="_method" value="DELETE">
+                                <button href="#" class="btn btn-sm btn-danger">
+                                    X
+                                </button>
+                            </form>
+                        </div>
+                    {% endif %}
                 </li>
             {% endfor %}
         </ul>
