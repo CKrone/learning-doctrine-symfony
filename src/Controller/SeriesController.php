@@ -3,12 +3,9 @@
 namespace App\Controller;
 
 use App\DTO\SeriesCreateFromInput;
-use App\Entity\Episode;
-use App\Entity\Season;
 use App\Entity\Series;
 use App\Form\SeriesType;
-use App\Repository\EpisodeRepository;
-use App\Repository\SeasonRepository;
+use App\Message\SeriesWasCreated;
 use App\Repository\SeriesRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Exception\ORMException;
@@ -16,6 +13,8 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Mailer\MailerInterface;
+use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Routing\Annotation\Route;
 
 class SeriesController extends AbstractController
@@ -23,6 +22,8 @@ class SeriesController extends AbstractController
     public function __construct(
         private SeriesRepository $seriesRepository,
         private EntityManagerInterface $entityManager,
+        private MailerInterface $mailer,
+        private MessageBusInterface $messenger,
     ) {
     }
 
@@ -56,6 +57,8 @@ class SeriesController extends AbstractController
 
         $this->addFlash('success', "Série '{$series->getName()}' adicionada com sucesso!");
         $this->seriesRepository->add($input);
+        $this->messenger->dispatch(new SeriesWasCreated($series));
+
         return new RedirectResponse('/series');
     }
 
