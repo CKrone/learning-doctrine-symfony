@@ -2,7 +2,7 @@
 
 namespace App\Repository;
 
-use App\DTO\SeriesCreateFromInput;
+use App\DTO\SeriesCreationInputDTO;
 use App\Entity\Series;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\ORM\Exception\ORMException;
@@ -56,10 +56,10 @@ class SeriesRepository extends ServiceEntityRepository
 //
 //    }
 
-    public function add(SeriesCreateFromInput $input): Series
+    public function add(SeriesCreationInputDTO $input): Series
     {
         $entityManager = $this->getEntityManager();
-        $series = new Series($input->seriesName);
+        $series = new Series($input->seriesName, $input->coverImage);
         $entityManager->persist($series);
         $entityManager->flush();
 
